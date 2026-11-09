@@ -181,7 +181,7 @@ export function FormProyecto({ proyecto, inmuebleId, onCerrar, onGuardado }) {
     >
       <form id="form-proyecto" className="formulario" onSubmit={enviar}>
         <Campo etiqueta="Nombre del proyecto *" ancho>
-          <input value={v.nombre} onChange={set("nombre")} required autoFocus={nuevo} placeholder="Ej. Proyecto urbanístico Bateros" />
+          <input value={v.nombre} onChange={set("nombre")} required autoFocus={nuevo} placeholder="Ej. Remodelación de fachada" />
         </Campo>
         <Campo etiqueta="Descripción" ancho>
           <textarea rows={2} value={v.descripcion} onChange={set("descripcion")} />
