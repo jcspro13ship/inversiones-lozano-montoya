@@ -860,6 +860,9 @@ function claveAdminDesdeMenu() {
 }
 
 function cargarSemilla() {
+  if (typeof SEMILLA === 'undefined') {
+    throw new Error('Falta el archivo Semilla en Apps Script. Créalo con + > Secuencia de comandos, pega el contenido de Semilla.gs, guarda y vuelve a ejecutar la instalación.')
+  }
   var s = SEMILLA
   var ahoraTxt = ahora()
   var base = { creado_en: ahoraTxt, creado_por: 'sistema', actualizado_en: ahoraTxt, actualizado_por: 'sistema', archivado: false }
