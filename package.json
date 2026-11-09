@@ -1,0 +1,25 @@
+{
+  "name": "inversiones-lozano-montoya",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "servidor-local": "node scripts/servidor-local.mjs",
+    "probar": "node scripts/probar-backend.mjs",
+    "semilla": "node scripts/generar-semilla.mjs",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "vite build && gh-pages -d dist"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "gh-pages": "^6.1.1",
+    "vite": "^5.4.8"
+  }
+}

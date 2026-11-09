@@ -1,0 +1,9 @@
+node_modules
+dist
+.env.local
+.DS_Store
+
+# Datos de la familia (nombres de arrendatarios, cánones): no subir a GitHub
+data/
+apps-script/Semilla.gs
+scripts/generar-semilla.mjs
