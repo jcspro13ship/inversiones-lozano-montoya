@@ -28,7 +28,7 @@ Aplicación web instalable (computador, iPhone y Android) para gestionar los inm
 | Ruta | Qué es |
 |---|---|
 | `apps-script/Code.gs` | Backend: usuarios, sesiones, roles, proyectos, tareas, historial, adjuntos y sincronización con la Hoja |
-| `apps-script/Semilla.gs` | Inventario inicial (7 inmuebles, 28 unidades) y los pendientes convertidos en 9 proyectos y 31 tareas. Lo genera `npm run semilla` |
+| `apps-script/Semilla.gs` | Inventario inicial (7 inmuebles, 28 unidades) con un proyecto por inmueble y 48 tareas iniciales. Lo genera `npm run semilla` (archivos locales, no van a GitHub) |
 | `apps-script/appsscript.json` | Zona horaria (Bogotá) y permisos del script |
 | `src/` | App web (React + Vite) |
 | `public/` | Íconos, manifiesto y service worker de la app instalable |

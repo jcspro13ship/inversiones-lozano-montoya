@@ -2,6 +2,6 @@
   "version": "0.0.1",
   "configurations": [
     { "name": "api-local", "runtimeExecutable": "node", "runtimeArgs": ["scripts/servidor-local.mjs"], "port": 8787 },
-    { "name": "app", "runtimeExecutable": "npx", "runtimeArgs": ["vite", "--port", "5180"], "port": 5180 }
+    { "name": "app", "runtimeExecutable": "env", "runtimeArgs": ["VITE_API_URL=http://localhost:8787", "npx", "vite", "--port", "5180"], "port": 5180 }
   ]
 }

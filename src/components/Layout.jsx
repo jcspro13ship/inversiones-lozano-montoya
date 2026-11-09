@@ -15,7 +15,6 @@ export default function Layout() {
 
   const principales = [
     { a: "/", n: "inicio", t: "Inicio", fin: true },
-    { a: "/inmuebles", n: "edificio", t: "Inmuebles" },
     { a: "/proyectos", n: "carpeta", t: "Proyectos" },
     { a: "/mis-tareas", n: "tareas", t: "Mis tareas", cuenta: misAbiertas },
   ];

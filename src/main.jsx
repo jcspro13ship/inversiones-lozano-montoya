@@ -6,7 +6,7 @@ import Layout from "./components/Layout";
 import { Cargando } from "./components/ui";
 import { Login, CambioObligatorio } from "./pages/Acceso";
 import Tablero from "./pages/Tablero";
-import Inmuebles, { InmuebleDetalle } from "./pages/Inmuebles";
+import { RedirigirInmueble } from "./pages/Inmuebles";
 import Proyectos, { ProyectoDetalle } from "./pages/Proyectos";
 import { MisTareas, Historial, Usuarios, Ajustes } from "./pages/Gestion";
 import "./estilos.css";
@@ -29,8 +29,8 @@ function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<Tablero />} />
-        <Route path="inmuebles" element={<Inmuebles />} />
-        <Route path="inmuebles/:id" element={<InmuebleDetalle />} />
+        <Route path="inmuebles" element={<Navigate to="/proyectos" replace />} />
+        <Route path="inmuebles/:id" element={<RedirigirInmueble />} />
         <Route path="proyectos" element={<Proyectos />} />
         <Route path="proyectos/:id" element={<ProyectoDetalle />} />
         <Route path="mis-tareas" element={<MisTareas />} />

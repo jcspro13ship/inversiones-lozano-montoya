@@ -22,7 +22,8 @@ igual(d.consolidado.valor_bajo, 7456153846, "Valor bajo total");
 igual(d.consolidado.valor_alto, 11120000000, "Valor alto total");
 igual(d.consolidado.total_unidades, 28, "Total de unidades");
 igual(d.inmuebles.find((i) => i.id === "inm-5").valor_estimado, null, "Inmueble sin canon queda sin valor");
-igual(d.tareas.length, 31, "Tareas iniciales");
+igual(d.tareas.length, 48, "Tareas iniciales");
+igual(d.proyectos.filter((p) => p.tipo === "Inmueble").length, 7, "Un proyecto por inmueble");
 igual(d.config.alertas.length, 6, "Alertas de verificación cargadas en CONFIG");
 
 // Usuarios y roles
@@ -63,7 +64,7 @@ ok(llamar({ action: "guardar", token: tokenAdmin, tabla: "UNIDADES", id: "uni-3"
 igual(llamar({ action: "datos", token: tokenAdmin }).data.consolidado.canon_mensual, 44900000, "Recalcula canon total");
 const h1 = hojas.get("1. Inventario Propiedades").datos;
 igual(h1[1][11], 7650000, "Pestaña 1 sincronizada (canon del inmueble 1)");
-igual(hojas.get("4. Seguimiento Obras").datos.filter((f) => f[0]).length, 9, "Pestaña 4 con un renglón por proyecto");
+igual(hojas.get("4. Seguimiento Obras").datos.filter((f) => f[0]).length, 7, "Pestaña 4 con un renglón por proyecto");
 
 // Desactivar usuario cierra su sesión
 llamar({ action: "editarUsuario", token: tokenAdmin, id: idPedro, data: { activo: false } });

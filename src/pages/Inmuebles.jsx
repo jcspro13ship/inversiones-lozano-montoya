@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useEstado } from "../estado";
 import { pesos, pesosCorto, porcentaje } from "../lib/formato";
-import { Icono, Prioridad, Chip, Modal, Campo, Progreso, Segmentos, Vacio } from "../components/ui";
-import { FormProyecto, PRIORIDADES } from "../components/Formularios";
-import Actividad from "../components/Actividad";
+import { Icono, Prioridad, Chip, Modal, Campo } from "../components/ui";
+import { PRIORIDADES } from "../components/Formularios";
 
 const TIPOS = ["Mixto", "Comercial", "Residencial", "Rural"];
 const USOS = ["Comercial", "Residencial", "Predio rural", "Otro"];
@@ -17,70 +16,22 @@ function tasaPorTipo(tipo, t) {
 }
 
 // Recalcula el valor con tasas hipotéticas (no guarda nada).
-function valorConTasas(inm, tasas) {
+export function valorConTasas(inm, tasas) {
   const tasa = Number(inm.tasa_manual) || tasaPorTipo(inm.tipo, tasas);
   const ingreso = (inm.canon_mensual || 0) * 12;
-  if (!ingreso) return { tasa, valor: null, bajo: null, alto: null };
-  return { tasa, valor: ingreso / tasa, bajo: ingreso / (tasa + tasas.sensibilidad), alto: tasa - tasas.sensibilidad > 0 ? ingreso / (tasa - tasas.sensibilidad) : null };
+  if (!ingreso) return { tasa, valor: null };
+  return { tasa, valor: ingreso / tasa };
 }
 
-export default function Inmuebles() {
-  const { datos, ayudas, permisos } = useEstado();
-  const [nuevo, setNuevo] = useState(false);
-  const [escenario, setEscenario] = useState(null);
-  const tasas = escenario || datos.config?.tasas;
-
-  const filas = ayudas.inmueblesActivos.map((i) => ({ ...i, calc: tasas ? valorConTasas(i, tasas) : null }));
-  const total = filas.reduce((s, f) => s + (f.calc?.valor || 0), 0);
-
-  return (
-    <div className="pagina">
-      <header className="pagina-cabeza">
-        <div>
-          <p className="sobretitulo">{filas.length} inmuebles · {datos.unidades.filter(ayudas.activo).length} unidades</p>
-          <h1>Inmuebles</h1>
-        </div>
-        {permisos.editarInventario && <button className="boton" onClick={() => setNuevo(true)}><Icono n="mas" t={18} />Nuevo inmueble</button>}
-      </header>
-
-      {permisos.verValores && tasas && (
-        <Escenario base={datos.config.tasas} valor={escenario} onCambio={setEscenario} total={total} />
-      )}
-
-      <div className="rejilla-inmuebles">
-        {filas.map((i) => {
-          const proyectos = ayudas.proyectosDeInmueble(i.id);
-          const ts = proyectos.flatMap((p) => ayudas.tareasDe(p.id));
-          const abiertas = ts.filter((t) => t.estado !== "Hecha").length;
-          return (
-            <Link key={i.id} to={`/inmuebles/${i.id}`} className="tarjeta-inmueble">
-              <div className="tarjeta-inmueble-cabeza">
-                <span className={`tipo-icono tipo-${String(i.tipo).toLowerCase()}`}><Icono n="edificio" /></span>
-                <Prioridad v={i.prioridad} />
-              </div>
-              <h3>{i.nombre}</h3>
-              <p className="tenue">{[i.tipo, i.ciudad || "Ciudad sin dato"].filter(Boolean).join(" · ")}</p>
-              {permisos.verValores && (
-                <div className="cifras">
-                  <div><span>Canon</span><strong>{pesosCorto(i.canon_mensual)}</strong></div>
-                  <div><span>Valor estimado</span><strong>{i.calc?.valor ? pesosCorto(i.calc.valor) : "Sin dato"}</strong></div>
-                </div>
-              )}
-              <div className="tarjeta-inmueble-pie">
-                <span>{ayudas.unidadesDe(i.id).length} unidades</span>
-                <span>{abiertas} tareas abiertas</span>
-              </div>
-              <Progreso pct={ts.length ? (ts.length - abiertas) / ts.length : 0} />
-            </Link>
-          );
-        })}
-      </div>
-      {nuevo && <FormInmueble onCerrar={() => setNuevo(false)} />}
-    </div>
-  );
+// Las rutas antiguas /inmuebles/:id llevan al proyecto del inmueble.
+export function RedirigirInmueble() {
+  const { id } = useParams();
+  const { ayudas } = useEstado();
+  const p = ayudas.proyectoDeInmueble(id);
+  return <Navigate to={p ? `/proyectos/${p.id}` : "/proyectos"} replace />;
 }
 
-function Escenario({ base, valor, onCambio, total }) {
+export function Escenario({ base, valor, onCambio, total }) {
   const [abierto, setAbierto] = useState(false);
   const t = valor || base;
   const set = (k) => (e) => onCambio({ ...t, [k]: Number(e.target.value) / 100 });
@@ -88,7 +39,7 @@ function Escenario({ base, valor, onCambio, total }) {
     <section className={`tarjeta escenario ${valor ? "escenario-activo" : ""}`}>
       <button className="escenario-cabeza" onClick={() => setAbierto((v) => !v)}>
         <div>
-          <span className="tenue">{valor ? "Escenario con tasas modificadas" : "Valor total con tasas actuales"}</span>
+          <span className="tenue">{valor ? "Valor del portafolio con tasas modificadas" : "Valor estimado del portafolio"}</span>
           <strong>{pesos(Math.round(total))}</strong>
         </div>
         <span className="enlace-ver">{abierto ? "Cerrar" : "Probar otras tasas"}<Icono n={abierto ? "cerrar" : "adelante"} t={16} /></span>
@@ -109,41 +60,33 @@ function Escenario({ base, valor, onCambio, total }) {
   );
 }
 
-export function InmuebleDetalle() {
-  const { id } = useParams();
+const SinDato = () => <span className="sin-dato">Sin dato</span>;
+
+// Diagnóstico inicial de un inmueble: datos, valoración, estado, recomendación y unidades.
+export function Diagnostico({ inmuebleId }) {
   const navegar = useNavigate();
   const { ayudas, permisos, archivar, avisar } = useEstado();
-  const [pestana, setPestana] = useState("unidades");
   const [editar, setEditar] = useState(false);
   const [unidad, setUnidad] = useState(null);
-  const [nuevoProyecto, setNuevoProyecto] = useState(false);
-  const i = ayudas.inmueble(id);
-  if (!i) return <div className="pagina"><Vacio titulo="Inmueble no encontrado" /></div>;
-  const unidades = ayudas.unidadesDe(id);
-  const proyectos = ayudas.proyectosDeInmueble(id);
+  const i = ayudas.inmueble(inmuebleId);
+  if (!i) return <p className="tenue">No se encontró el inmueble.</p>;
+  const unidades = ayudas.unidadesDe(inmuebleId);
 
   async function archivarInmueble() {
-    if (!confirm(`¿Archivar «${i.nombre}»? Deja de contar en los totales; se puede restaurar.`)) return;
+    if (!confirm(`¿Archivar «${i.nombre}» y su proyecto? Deja de contar en los totales; se puede restaurar.`)) return;
     try {
       await archivar("INMUEBLES", i.id);
+      const p = ayudas.proyectoDeInmueble(i.id);
+      if (p) await archivar("PROYECTOS", p.id);
       avisar("Inmueble archivado");
-      navegar("/inmuebles");
+      navegar("/proyectos");
     } catch (e) {
       avisar(e.message, "error");
     }
   }
 
   return (
-    <div className="pagina">
-      <Link to="/inmuebles" className="volver"><Icono n="atras" t={18} />Inmuebles</Link>
-      <header className="pagina-cabeza">
-        <div>
-          <p className="sobretitulo">{i.tipo} · {i.ciudad || "Ciudad sin dato"}</p>
-          <h1>{i.nombre}</h1>
-        </div>
-        {permisos.editarInventario && <button className="boton boton-suave" onClick={() => setEditar(true)}><Icono n="editar" t={16} />Editar</button>}
-      </header>
-
+    <div className="diagnostico">
       {permisos.verValores && (
         <section className="kpis">
           <div className="kpi"><span>Canon mensual</span><strong>{pesos(i.canon_mensual)}</strong><small>{pesos(i.ingreso_anual)} al año</small></div>
@@ -153,63 +96,47 @@ export function InmuebleDetalle() {
       )}
 
       <section className="tarjeta">
+        <div className="tarjeta-cabeza">
+          <h2>Datos del inmueble</h2>
+          {permisos.editarInventario && <button className="boton boton-suave" onClick={() => setEditar(true)}><Icono n="editar" t={16} />Editar</button>}
+        </div>
         <dl className="ficha ficha-columnas">
-          <div><dt>Dirección</dt><dd>{i.direccion || <span className="sin-dato">Sin dato</span>}</dd></div>
-          <div><dt>Barrio</dt><dd>{i.barrio || <span className="sin-dato">Sin dato</span>}</dd></div>
-          <div><dt>Propietarios</dt><dd>{i.propietarios || <span className="sin-dato">Sin dato</span>}</dd></div>
-          <div><dt>Matrícula</dt><dd>{i.matricula || <span className="sin-dato">Sin dato</span>}</dd></div>
-          <div><dt>Ref. catastral</dt><dd>{i.ref_catastral || <span className="sin-dato">Sin dato</span>}</dd></div>
-          <div><dt>Último predial</dt><dd>{i.anio_predial || <span className="sin-dato">Sin dato</span>}</dd></div>
-          <div><dt>Área</dt><dd>{i.area_m2 ? `${i.area_m2} m²` : <span className="sin-dato">Sin dato</span>}</dd></div>
+          <div><dt>Tipo</dt><dd>{i.tipo || <SinDato />}</dd></div>
+          <div><dt>Ciudad</dt><dd>{i.ciudad || <SinDato />}</dd></div>
+          <div><dt>Dirección</dt><dd>{i.direccion || <SinDato />}</dd></div>
+          <div><dt>Barrio</dt><dd>{i.barrio || <SinDato />}</dd></div>
+          <div><dt>Propietarios</dt><dd>{i.propietarios || <SinDato />}</dd></div>
+          <div><dt>Matrícula</dt><dd>{i.matricula || <SinDato />}</dd></div>
+          <div><dt>Ref. catastral</dt><dd>{i.ref_catastral || <SinDato />}</dd></div>
+          <div><dt>Último predial</dt><dd>{i.anio_predial || <SinDato />}</dd></div>
+          <div><dt>Área</dt><dd>{i.area_m2 ? `${i.area_m2} m²` : <SinDato />}</dd></div>
           <div><dt>Prioridad</dt><dd><Prioridad v={i.prioridad} /></dd></div>
         </dl>
-        {i.estado && <div className="bloque-texto"><h4>Estado actual</h4><p>{i.estado}</p></div>}
-        {i.recomendacion && <div className="bloque-texto"><h4>Recomendación</h4><p>{i.recomendacion}</p></div>}
-        {i.notas && <div className="bloque-texto"><h4>Notas</h4><p>{i.notas}</p></div>}
       </section>
 
-      <Segmentos valor={pestana} onCambio={setPestana} opciones={[["unidades", `Unidades · ${unidades.length}`], ["proyectos", `Proyectos · ${proyectos.length}`], ["actividad", "Actividad"]]} />
-
-      {pestana === "unidades" && (
+      {(i.estado || i.recomendacion || i.notas) && (
         <section className="tarjeta">
-          <div className="tarjeta-cabeza">
-            <h2>Unidades y arriendos</h2>
-            {permisos.editarInventario && <button className="boton boton-suave" onClick={() => setUnidad({ inmueble_id: id })}><Icono n="mas" t={16} />Unidad</button>}
-          </div>
-          <div className="lista-unidades">
-            {unidades.map((u) => <FilaUnidad key={u.id} u={u} onEditar={permisos.editarInventario ? () => setUnidad(u) : null} />)}
-            {!unidades.length && <p className="tenue">No hay unidades registradas.</p>}
-          </div>
+          {i.estado && <div className="bloque-texto"><h4>Estado encontrado</h4><p>{i.estado}</p></div>}
+          {i.recomendacion && <div className="bloque-texto"><h4>Recomendación</h4><p>{i.recomendacion}</p></div>}
+          {i.notas && <div className="bloque-texto"><h4>Notas</h4><p>{i.notas}</p></div>}
         </section>
       )}
 
-      {pestana === "proyectos" && (
-        <section className="tarjeta">
-          <div className="tarjeta-cabeza">
-            <h2>Proyectos</h2>
-            {permisos.gestionar && <button className="boton boton-suave" onClick={() => setNuevoProyecto(true)}><Icono n="mas" t={16} />Proyecto</button>}
-          </div>
-          {proyectos.map((p) => {
-            const pr = ayudas.progreso(p.id);
-            return (
-              <Link key={p.id} to={`/proyectos/${p.id}`} className="fila-proyecto">
-                <div><strong>{p.nombre}</strong><small className="tenue">{pr.hechas}/{pr.total} tareas</small></div>
-                <Chip v={p.estado} />
-                <Progreso pct={pr.pct} />
-              </Link>
-            );
-          })}
-          {!proyectos.length && <p className="tenue">Sin proyectos para este inmueble.</p>}
-        </section>
-      )}
-
-      {pestana === "actividad" && <section className="tarjeta"><Actividad entidad="INMUEBLES" id={id} /></section>}
+      <section className="tarjeta">
+        <div className="tarjeta-cabeza">
+          <h2>Unidades y arriendos · {unidades.length}</h2>
+          {permisos.editarInventario && <button className="boton boton-suave" onClick={() => setUnidad({ inmueble_id: inmuebleId })}><Icono n="mas" t={16} />Unidad</button>}
+        </div>
+        <div className="lista-unidades">
+          {unidades.map((u) => <FilaUnidad key={u.id} u={u} onEditar={permisos.editarInventario ? () => setUnidad(u) : null} />)}
+          {!unidades.length && <p className="tenue">No hay unidades registradas.</p>}
+        </div>
+      </section>
 
       {permisos.archivar && <button className="boton-texto peligro" onClick={archivarInmueble}><Icono n="archivar" t={16} />Archivar inmueble</button>}
 
       {editar && <FormInmueble inmueble={i} onCerrar={() => setEditar(false)} />}
       {unidad && <FormUnidad unidad={unidad} onCerrar={() => setUnidad(null)} />}
-      {nuevoProyecto && <FormProyecto inmuebleId={id} onCerrar={() => setNuevoProyecto(false)} onGuardado={(p) => navegar(`/proyectos/${p.id}`)} />}
     </div>
   );
 }
@@ -248,8 +175,9 @@ function FilaUnidad({ u, onEditar }) {
   );
 }
 
-function FormInmueble({ inmueble, onCerrar }) {
-  const { guardar, avisar, permisos } = useEstado();
+// Crear un inmueble crea también su proyecto; editar el nombre renombra el proyecto.
+export function FormInmueble({ inmueble, onCerrar }) {
+  const { guardar, avisar, permisos, ayudas } = useEstado();
   const navegar = useNavigate();
   const [v, setV] = useState(() => ({
     nombre: "", direccion: "", barrio: "", ciudad: "", tipo: "Residencial", propietarios: "", ref_catastral: "", matricula: "",
@@ -268,9 +196,20 @@ function FormInmueble({ inmueble, onCerrar }) {
       const data = Object.fromEntries(campos.map((k) => [k, v[k] ?? ""]));
       if (data.tasa_manual !== "" && Number(data.tasa_manual) >= 1) data.tasa_manual = Number(data.tasa_manual) / 100;
       const r = await guardar("INMUEBLES", inmueble?.id, data);
-      avisar(inmueble ? "Inmueble actualizado" : "Inmueble creado");
+      if (!inmueble) {
+        const p = await guardar("PROYECTOS", undefined, {
+          nombre: r.nombre, descripcion: "", inmueble_ids: r.id, tipo: "Inmueble", estado: "Planeación",
+          prioridad: r.prioridad || "Media", responsable_tipo: "pendiente",
+        });
+        avisar("Inmueble y proyecto creados");
+        onCerrar();
+        navegar(`/proyectos/${p.id}?vista=diagnostico`);
+        return;
+      }
+      const p = ayudas.proyectoDeInmueble(inmueble.id);
+      if (p && p.nombre === inmueble.nombre && r.nombre !== inmueble.nombre) await guardar("PROYECTOS", p.id, { nombre: r.nombre });
+      avisar("Inmueble actualizado");
       onCerrar();
-      if (!inmueble) navegar(`/inmuebles/${r.id}`);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -282,6 +221,7 @@ function FormInmueble({ inmueble, onCerrar }) {
     <Modal titulo={inmueble ? "Editar inmueble" : "Nuevo inmueble"} onCerrar={onCerrar}
       pie={<><button className="boton boton-suave" onClick={onCerrar}>Cancelar</button><button className="boton" form="form-inm" disabled={guardando}>{guardando ? "Guardando…" : "Guardar"}</button></>}>
       <form id="form-inm" className="formulario" onSubmit={enviar}>
+        {!inmueble && <p className="tenue campo-ancho">Se crea el inmueble y su proyecto, donde quedarán sus tareas, archivos y diagnóstico.</p>}
         <Campo etiqueta="Nombre *" ancho><input value={v.nombre} onChange={set("nombre")} required /></Campo>
         <Campo etiqueta="Tipo"><select value={v.tipo} onChange={set("tipo")}>{TIPOS.map((x) => <option key={x}>{x}</option>)}</select></Campo>
         <Campo etiqueta="Prioridad"><select value={v.prioridad} onChange={set("prioridad")}>{PRIORIDADES.map((x) => <option key={x}>{x}</option>)}</select></Campo>
@@ -298,7 +238,7 @@ function FormInmueble({ inmueble, onCerrar }) {
             <input inputMode="decimal" value={v.tasa_manual === "" ? "" : Number(v.tasa_manual) < 1 ? +(Number(v.tasa_manual) * 100).toFixed(2) : v.tasa_manual} onChange={set("tasa_manual")} placeholder="Ej. 6.5" />
           </Campo>
         )}
-        <Campo etiqueta="Estado actual" ancho><textarea rows={2} value={v.estado} onChange={set("estado")} /></Campo>
+        <Campo etiqueta="Estado encontrado" ancho><textarea rows={2} value={v.estado} onChange={set("estado")} /></Campo>
         <Campo etiqueta="Recomendación" ancho><textarea rows={2} value={v.recomendacion} onChange={set("recomendacion")} /></Campo>
         <Campo etiqueta="Notas" ancho><textarea rows={2} value={v.notas} onChange={set("notas")} /></Campo>
         {error && <p className="error campo-ancho">{error}</p>}

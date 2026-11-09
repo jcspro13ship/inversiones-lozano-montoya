@@ -6,9 +6,9 @@ import { fechaHora, hace, tamano } from "../lib/formato";
 import { Icono, Avatar, Segmentos, Cargando, Modal } from "./ui";
 
 // Comentarios, adjuntos e historial de cualquier inmueble, proyecto o tarea.
-export default function Actividad({ entidad, id }) {
+export default function Actividad({ entidad, id, inicial = "comentarios" }) {
   const { ayudas } = useEstado();
-  const [pestana, setPestana] = useState("comentarios");
+  const [pestana, setPestana] = useState(inicial);
   const nCom = ayudas.comentariosDe(entidad, id).length;
   const nAdj = ayudas.adjuntosDe(entidad, id).length;
   return (

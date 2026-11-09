@@ -5,7 +5,7 @@ import { Modal, Campo, Segmentos } from "./ui";
 export const ESTADOS_TAREA = ["Pendiente", "En curso", "Bloqueada", "Hecha"];
 export const ESTADOS_PROYECTO = ["Planeación", "En curso", "En pausa", "Bloqueado", "Terminado"];
 export const PRIORIDADES = ["Alta", "Media", "Baja"];
-export const TIPOS_PROYECTO = ["Contratos", "Contratos y mantenimiento", "Contratos y cobranza", "Legal", "Legal y cobranza", "Mantenimiento", "Obra", "Eléctrico", "Financiero", "Planeación", "Verificación", "Otro"];
+export const TIPOS_PROYECTO = ["Proyecto futuro", "Compra", "Venta", "Remodelación", "Contratos", "Contratos y mantenimiento", "Contratos y cobranza", "Legal", "Legal y cobranza", "Mantenimiento", "Obra", "Eléctrico", "Financiero", "Planeación", "Verificación", "Otro"];
 
 // Responsable: un usuario de la app o un tercero que no tiene usuario.
 export function SelectorResponsable({ valor, onCambio, obligatorio }) {
@@ -133,20 +133,20 @@ export function FormProyecto({ proyecto, inmuebleId, onCerrar, onGuardado }) {
   const { guardar, avisar, ayudas, permisos } = useEstado();
   const nuevo = !proyecto;
   const [v, setV] = useState(() => ({
-    nombre: "", descripcion: "", tipo: "Mantenimiento", estado: "Planeación", prioridad: "Media",
+    nombre: "", descripcion: "", tipo: "Proyecto futuro", estado: "Planeación", prioridad: "Media",
     fecha_inicio: "", fecha_fin: "", presupuesto: "", invertido: "",
     responsable_tipo: "usuario", responsable_usuario_id: "", responsable_externo: "", responsable_contacto: "",
     ...(proyecto || {}),
     ...(proyecto?.responsable_tipo === "pendiente" ? { responsable_tipo: "usuario" } : {}),
   }));
   const [inms, setInms] = useState(() => (proyecto ? ayudas.idsInmuebles(proyecto) : inmuebleId ? [inmuebleId] : []));
+  const esInmueble = proyecto ? ayudas.esDeInmueble(proyecto) : false;
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
   const set = (k) => (e) => setV({ ...v, [k]: e.target.value });
 
   async function enviar(e) {
     e.preventDefault();
-    if (!inms.length) return setError("Selecciona al menos un inmueble.");
     setGuardando(true);
     setError("");
     try {
@@ -170,7 +170,7 @@ export function FormProyecto({ proyecto, inmuebleId, onCerrar, onGuardado }) {
 
   return (
     <Modal
-      titulo={nuevo ? "Nuevo proyecto" : "Editar proyecto"}
+      titulo={nuevo ? "Nuevo proyecto futuro" : "Editar proyecto"}
       onCerrar={onCerrar}
       pie={
         <>
@@ -181,13 +181,13 @@ export function FormProyecto({ proyecto, inmuebleId, onCerrar, onGuardado }) {
     >
       <form id="form-proyecto" className="formulario" onSubmit={enviar}>
         <Campo etiqueta="Nombre del proyecto *" ancho>
-          <input value={v.nombre} onChange={set("nombre")} required autoFocus={nuevo} placeholder="Ej. Remodelación local 3" />
+          <input value={v.nombre} onChange={set("nombre")} required autoFocus={nuevo} placeholder="Ej. Proyecto urbanístico Bateros" />
         </Campo>
         <Campo etiqueta="Descripción" ancho>
           <textarea rows={2} value={v.descripcion} onChange={set("descripcion")} />
         </Campo>
-        <div className="campo campo-ancho">
-          <span className="campo-etiqueta">Inmuebles *</span>
+        {!esInmueble && <div className="campo campo-ancho">
+          <span className="campo-etiqueta">Inmuebles relacionados (opcional)</span>
           <div className="opciones-chips">
             {ayudas.inmueblesActivos.map((i) => (
               <button type="button" key={i.id} className={`opcion-chip ${inms.includes(i.id) ? "activo" : ""}`} onClick={() => alternar(i.id)}>
@@ -195,12 +195,12 @@ export function FormProyecto({ proyecto, inmuebleId, onCerrar, onGuardado }) {
               </button>
             ))}
           </div>
-        </div>
-        <Campo etiqueta="Tipo">
+        </div>}
+        {!esInmueble && <Campo etiqueta="Tipo">
           <select value={v.tipo} onChange={set("tipo")}>
-            {[...new Set([...TIPOS_PROYECTO, v.tipo])].filter(Boolean).map((x) => <option key={x}>{x}</option>)}
+            {[...new Set([...TIPOS_PROYECTO, v.tipo])].filter((x) => x && x !== "Inmueble").map((x) => <option key={x}>{x}</option>)}
           </select>
-        </Campo>
+        </Campo>}
         <Campo etiqueta="Estado">
           <select value={v.estado} onChange={set("estado")}>{ESTADOS_PROYECTO.map((x) => <option key={x}>{x}</option>)}</select>
         </Campo>

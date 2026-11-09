@@ -23,7 +23,7 @@ Tiempo estimado: 30 a 45 minutos. Se hace una sola vez.
 
 Qué pasa en la Hoja:
 - Se crean las pestañas de la app: `CONFIG`, `USUARIOS`, `INMUEBLES`, `UNIDADES`, `PROYECTOS`, `TAREAS`, `COMENTARIOS`, `ADJUNTOS` e `HISTORIAL`.
-- Se cargan los 7 inmuebles, las 28 unidades y los pendientes como 9 proyectos con 31 tareas.
+- Se cargan los 7 inmuebles, las 28 unidades y un proyecto por inmueble con sus 48 tareas iniciales.
 - Las pestañas `1. Inventario Propiedades`, `4. Seguimiento Obras` y `5. Unidades y Arriendos` se vuelven **reportes**: la app las reescribe con cada cambio. No las edites a mano; edita desde la app o en las pestañas de la app.
 - Las pestañas `2. Resumen Arreglos`, `3. Consolidado Financiero` y `6. Supuestos y Fuentes` no se tocan.
 - En tu Drive aparece la carpeta privada **«App Inversiones Lozano Montoya · Adjuntos»**.
@@ -63,10 +63,11 @@ El repositorio ya está creado: **https://github.com/jcspro13ship/inversiones-lo
 
 ## Uso diario
 
-- **Proyecto nuevo:** Proyectos > Nuevo proyecto. Puede cubrir uno o varios inmuebles.
+- **Cómo está organizado:** en **Proyectos**, cada inmueble es un proyecto con tres pestañas: **Tareas**, **Diagnóstico inicial** (datos, unidades, cánones, valoración, estado encontrado y recomendación) y **Archivos y comentarios**. Debajo están los **proyectos futuros**: una compra, una remodelación o un proyecto urbanístico.
+- **Nuevo inmueble o proyecto futuro:** Proyectos > **Nuevo**. Si eliges *Un inmueble nuevo*, se crea con su proyecto. Si eliges *Un proyecto futuro*, puede cubrir uno, varios o ningún inmueble.
 - **Tarea nueva:** dentro del proyecto > Tarea. El responsable es obligatorio: un usuario de la app o un **tercero** (escribes su nombre y, si quieres, el teléfono).
 - **Avance:** toca el círculo de la tarea para marcarla como hecha, o usa los estados *Pendiente / En curso / Bloqueada / Hecha*.
-- **Comentarios y archivos:** en cada tarea, proyecto o inmueble. Desde el celular puedes tomar una foto directamente.
+- **Documentos y fotos:** en cada proyecto, botón **Adjuntar** (arriba) > *Subir archivo* o, en el celular, *Tomar foto*. Para una tarea en particular, ábrela y usa su pestaña *Adjuntos*.
 - **Historial:** queda todo, con quién, cuándo y qué cambió (antes y después). Los administradores y la familia lo filtran por persona y fecha, y lo exportan a CSV.
 
 ## Si algo falla

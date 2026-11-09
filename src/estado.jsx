@@ -163,6 +163,9 @@ function crearAyudas(datos) {
     progreso,
     idsInmuebles,
     proyectosDeInmueble: (inmId) => proyectosActivos.filter((p) => idsInmuebles(p).includes(inmId)),
+    // Cada inmueble tiene su proyecto principal (tipo "Inmueble"); los demás son proyectos futuros u otros.
+    esDeInmueble: (p) => p.tipo === "Inmueble" && idsInmuebles(p).length === 1,
+    proyectoDeInmueble: (inmId) => datos.proyectos.find((p) => p.tipo === "Inmueble" && idsInmuebles(p)[0] === inmId && activo(p)),
     unidadesDe: (inmId) => datos.unidades.filter((u) => u.inmueble_id === inmId && activo(u)),
     comentariosDe: (entidad, id) => datos.comentarios.filter((c) => c.entidad === entidad && c.entidad_id === id),
     adjuntosDe: (entidad, id) => datos.adjuntos.filter((a) => a.entidad === entidad && a.entidad_id === id && activo(a)),

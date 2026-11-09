@@ -81,15 +81,16 @@ export default function Tablero() {
         <section className="tarjeta">
           <div className="tarjeta-cabeza">
             <h2>Avance por inmueble</h2>
-            <Link to="/inmuebles" className="enlace-ver">Inmuebles<Icono n="adelante" t={16} /></Link>
+            <Link to="/proyectos" className="enlace-ver">Proyectos<Icono n="adelante" t={16} /></Link>
           </div>
           <div className="avance-inmuebles">
             {ayudas.inmueblesActivos.map((i) => {
+              const proyecto = ayudas.proyectoDeInmueble(i.id);
               const ts = ayudas.proyectosDeInmueble(i.id).flatMap((p) => ayudas.tareasDe(p.id));
               const hechas = ts.filter((t) => t.estado === "Hecha").length;
               const pct = ts.length ? hechas / ts.length : 0;
               return (
-                <Link key={i.id} to={`/inmuebles/${i.id}`} className="avance-fila">
+                <Link key={i.id} to={proyecto ? `/proyectos/${proyecto.id}` : "/proyectos"} className="avance-fila">
                   <div className="avance-nombre">
                     <strong>{i.nombre}</strong>
                     <Prioridad v={i.prioridad} />
